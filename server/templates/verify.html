@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Verification Result - Wedding{% endblock %}
+
+{% block content %}
+<div class="card">
+    {% if found %}
+    <div class="verification-success">
+        <div class="success-icon">✓</div>
+        <h1>Invitation Verified</h1>
+        
+        <div class="guest-info">
+            <div class="info-row">
+                <span class="label">Name:</span>
+                <span class="value">{{ name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Type:</span>
+                <span class="value type-badge type-{{ type.lower() }}">{{ type.upper() }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Code:</span>
+                <span class="value code-display">{{ code }}</span>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="verification-error">
+        <div class="error-icon">✗</div>
+        <h1>Invitation Not Found</h1>
+        <p>The code <strong>{{ code }}</strong> was not found in our records.</p>
+        <p class="help-text">Please check the code and try again.</p>
+    </div>
+    {% endif %}
+    
+    <div class="actions">
+        <a href="{{ url_for('index') }}" class="btn-secondary">Verify Another</a>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,14 @@
+We need a simple service where personel can verify a card either by scanning the QR code or entering the 5 digit code manually.
+Let's set this up with nginx basic auth:
+Username: george
+Password: wedding123go
+
+Nice simple and slick UI with the same color theme as the card.
+Show the invitee name, whether it is Single or Double.
+The spreadsheet could be updated so ideally i want a script to easily copy it to the server to be used as the db. (rsync should work).
+
+SSH Server details:
+Username: root
+Server IP: 46.62.209.58
+No password needed, this PC is allowed via SSH key
+Install whatever you need, this server is just for this at the moment. You may remove anything that gets in the way.

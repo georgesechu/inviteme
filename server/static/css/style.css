@@ -1,0 +1,247 @@
+/* Wedding Invitation Verification - Card Color Theme */
+:root {
+    --bg-cream: #f5f1e8;
+    --bg-parchment: #faf8f3;
+    --text-brown: #654321;
+    --text-dark: #3d2817;
+    --accent-gold: #d4af37;
+    --accent-nude: #e3d5c8;
+    --success-green: #4a7c59;
+    --error-red: #c85a4f;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: linear-gradient(135deg, var(--bg-cream) 0%, var(--bg-parchment) 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    color: var(--text-brown);
+    padding: 20px;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.card {
+    background: var(--bg-parchment);
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 8px 32px rgba(101, 67, 33, 0.15);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+h1 {
+    font-size: 2.5em;
+    color: var(--text-dark);
+    margin-bottom: 10px;
+    text-align: center;
+    font-weight: normal;
+    letter-spacing: 1px;
+}
+
+.subtitle {
+    text-align: center;
+    color: var(--text-brown);
+    font-size: 1.1em;
+    margin-bottom: 30px;
+    opacity: 0.8;
+}
+
+.verify-form {
+    margin: 30px 0;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.code-input {
+    width: 100%;
+    padding: 18px 24px;
+    font-size: 1.5em;
+    text-align: center;
+    letter-spacing: 8px;
+    border: 2px solid rgba(101, 67, 33, 0.3);
+    border-radius: 8px;
+    background: white;
+    color: var(--text-dark);
+    font-family: 'Courier New', monospace;
+    transition: all 0.3s ease;
+}
+
+.code-input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+}
+
+.code-input::placeholder {
+    letter-spacing: 2px;
+    color: rgba(101, 67, 33, 0.4);
+}
+
+.btn-primary, .btn-secondary {
+    width: 100%;
+    padding: 16px 24px;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Georgia', serif;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.btn-primary {
+    background: var(--text-brown);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--text-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(101, 67, 33, 0.3);
+}
+
+.btn-secondary {
+    background: var(--accent-nude);
+    color: var(--text-brown);
+    border: 2px solid rgba(101, 67, 33, 0.2);
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-secondary:hover {
+    background: rgba(227, 213, 200, 0.8);
+    transform: translateY(-2px);
+}
+
+.help-text {
+    text-align: center;
+    color: var(--text-brown);
+    opacity: 0.7;
+    margin-top: 20px;
+    font-size: 0.95em;
+}
+
+.verification-success, .verification-error {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.success-icon, .error-icon {
+    font-size: 4em;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.success-icon {
+    color: var(--success-green);
+}
+
+.error-icon {
+    color: var(--error-red);
+}
+
+.guest-info {
+    background: white;
+    border-radius: 8px;
+    padding: 30px;
+    margin: 30px 0;
+    border: 1px solid rgba(101, 67, 33, 0.1);
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(101, 67, 33, 0.1);
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.label {
+    font-weight: bold;
+    color: var(--text-brown);
+    font-size: 1.1em;
+}
+
+.value {
+    color: var(--text-dark);
+    font-size: 1.2em;
+}
+
+.type-badge {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.type-badge.type-single {
+    background: rgba(74, 124, 89, 0.15);
+    color: var(--success-green);
+}
+
+.type-badge.type-double {
+    background: rgba(212, 175, 55, 0.2);
+    color: #b8941f;
+}
+
+.code-display {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 4px;
+    font-size: 1.3em;
+    font-weight: bold;
+}
+
+.actions {
+    margin-top: 30px;
+}
+
+.verification-error p {
+    margin: 15px 0;
+    font-size: 1.1em;
+}
+
+.verification-error strong {
+    color: var(--text-dark);
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .container {
+        padding: 20px 10px;
+    }
+    
+    .card {
+        padding: 30px 20px;
+    }
+    
+    h1 {
+        font-size: 2em;
+    }
+    
+    .code-input {
+        font-size: 1.2em;
+        letter-spacing: 4px;
+    }
+}
+

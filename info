@@ -1,0 +1,15 @@
+We need to generate invitation cards from blank_invite.png
+The spreadsheet wedding_invites.ods contains all the guests.
+Here are the columns:
+A - Name
+B - Single or Double
+C - Phone Number (some are missing)
+D - Unique code
+
+I suggest we name the cards using the codes and place them in the cards folder.
+There is a space to insert the name of the invitee on the card.
+
+A QR code should be placed at the bottom right corner with the word 'SINGLE' or 'DOUBLE' on top of it.
+
+QR code should be a URL (You'll also be building the verification page).
+Come up with a URL structure. The server is is 46.62.209.58
