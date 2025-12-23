@@ -2,8 +2,9 @@
  * Authentication service
  */
 import { prisma } from '../config/database';
-import { sendWhatsAppCode } from './whatsapp';
+import { sendLoginCode } from './twilioClient';
 import { formatTanzanianPhone } from '@inviteme/shared';
+import { generateToken, verifyToken as verifyJWT } from './jwt';
 import type { User as PrismaUser } from '@prisma/client';
 
 /**
@@ -42,10 +43,10 @@ export async function requestLoginCode(
     },
   });
 
-  // Send code via WhatsApp
-  const sent = await sendWhatsAppCode(formattedPhone, code);
-  if (!sent) {
-    return { success: false, message: 'Failed to send WhatsApp code' };
+  // Send code via WhatsApp using template
+  const sent = await sendLoginCode(formattedPhone, code);
+  if (!sent.success) {
+    return { success: false, message: sent.error || 'Failed to send WhatsApp code' };
   }
 
   return { success: true, message: 'Code sent successfully' };
@@ -102,9 +103,11 @@ export async function verifyLoginCode(
  */
 export async function verifyTokenAsync(token: string): Promise<PrismaUser | null> {
   try {
-    const decoded = Buffer.from(token, 'base64').toString('utf-8');
-    const [userId] = decoded.split(':');
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const payload = verifyJWT(token);
+    if (!payload) {
+      return null;
+    }
+    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
     return user || null;
   } catch {
     return null;

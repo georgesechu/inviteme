@@ -1,0 +1,14 @@
+I want to turn this into a fully working web and mobile app called inviteme
+
+Server - Nodejs using TypeScript
+WebApp - reactjs using TypeScript
+Mobile Apps - react-native using TypeScript
+
+Single repository (monorepo) for all components.
+Since typescript is used we should have a large shared codebase (shared by the server web and mobile)
+
+Features:
+-Login via a whatsapp code
+-Ability to add Guests (Name, Mobile, Single or Double)
+-Ability to pick a card design from a gallery
+-Ability to share invitation cards (whatsapp) - This is not free and we need a way to charge for this

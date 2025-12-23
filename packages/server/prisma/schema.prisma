@@ -36,6 +36,7 @@ model Guest {
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invitationGuests InvitationGuest[]
 
   @@index([userId])
   @@index([code])
@@ -62,6 +63,7 @@ model Invitation {
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   cardDesign CardDesign  @relation(fields: [cardDesignId], references: [id])
   payments   Payment[]
+  invitationGuests InvitationGuest[]
 
   @@index([userId])
 }
@@ -84,5 +86,15 @@ model Payment {
   @@index([userId])
   @@index([invitationId])
   @@index([status])
+}
+
+model InvitationGuest {
+  invitationId String
+  guestId      String
+
+  invitation Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  guest       Guest      @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@id([invitationId, guestId])
 }
 

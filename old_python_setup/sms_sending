@@ -1,0 +1,10 @@
+we need to send sms as well.
+we have a local api we can try
+
+https://www.sms.co.tz/api.php?do=sms&username={username}&password={password}&senderid=SMS.co.tz&dest={msisdn}&msg={message}
+
+where:
+username=mitikazinc
+password=kpy3!q6j
+msisdn=phone number (with 255 without the +)
+A simple GET request should work.
