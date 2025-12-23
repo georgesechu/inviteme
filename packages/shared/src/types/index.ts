@@ -23,8 +23,38 @@ export interface Event {
   date?: Date;
   location?: string;
   description?: string;
+  cardDesignImageUrl?: string | null;
+  cardTemplateConfig?: TemplateConfig | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface TemplateElement {
+  id: string;
+  type: 'text' | 'qr';
+  field?: string; // Data field to bind (e.g., 'guest.name', 'event.date')
+  content?: string; // Static content or template string
+  position: {
+    x: number; // Percentage (0-100) or pixels
+    y: number;
+    anchor?: 'center' | 'left' | 'right' | 'top' | 'bottom';
+  };
+  style: {
+    fontFamily?: string;
+    fontSize?: number;
+    fontWeight?: 'normal' | 'bold' | 'lighter';
+    color?: string;
+    textAlign?: 'left' | 'center' | 'right';
+    lineHeight?: number;
+    size?: number; // For QR codes
+  };
+  dynamic: boolean;
+}
+
+export interface TemplateConfig {
+  version: string;
+  baseImage: string;
+  elements: TemplateElement[];
 }
 
 export interface CardDesign {
@@ -32,6 +62,7 @@ export interface CardDesign {
   name: string;
   thumbnailUrl: string;
   templateUrl: string;
+  templateConfig?: TemplateConfig | null;
   createdAt: Date;
 }
 

@@ -1,7 +1,7 @@
 /**
  * SDK state types
  */
-import type { User, Guest, Event } from '../types';
+import type { User, Guest, Event, CardDesign } from '../types';
 
 export interface AuthState {
   user: User | null;
@@ -39,5 +39,12 @@ export interface EventsState {
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
+}
+
+export interface CardDesignsState {
+  designs: CardDesign[];
+  isLoading: boolean;
+  error: string | null;
+  isCreating: boolean;
 }
 

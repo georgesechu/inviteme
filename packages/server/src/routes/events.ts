@@ -69,7 +69,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 router.put('/:id', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, date, location, description } = req.body as UpdateEventBody;
+    const { name, date, location, description, cardDesignImageUrl, cardTemplateConfig } = req.body as UpdateEventBody;
 
     const event = await prisma.event.findUnique({ where: { id } });
     if (!event) {
@@ -85,14 +85,17 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
       } as ApiResponse<null>);
     }
 
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name.trim();
+    if (date !== undefined) updateData.date = date ? new Date(date) : null;
+    if (location !== undefined) updateData.location = location?.trim() || null;
+    if (description !== undefined) updateData.description = description?.trim() || null;
+    if (cardDesignImageUrl !== undefined) updateData.cardDesignImageUrl = cardDesignImageUrl || null;
+    if (cardTemplateConfig !== undefined) updateData.cardTemplateConfig = cardTemplateConfig || null;
+
     const updated = await prisma.event.update({
       where: { id },
-      data: {
-        name: name?.trim() ?? event.name,
-        date: date ? new Date(date) : event.date,
-        location: location?.trim() ?? event.location,
-        description: description?.trim() ?? event.description,
-      },
+      data: updateData,
     });
     return res.json({ success: true, data: updated } as ApiResponse<Event>);
   } catch (error) {

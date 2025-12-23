@@ -1,7 +1,7 @@
 /**
  * API request/response types
  */
-import type { User, Guest, Event } from '../types';
+import type { User, Guest, Event, CardDesign, TemplateConfig } from '../types';
 import type { ApiResponse } from '../types';
 
 // Re-export ApiResponse for convenience
@@ -64,9 +64,33 @@ export interface UpdateEventBody {
   date?: string;
   location?: string;
   description?: string;
+  cardDesignImageUrl?: string | null;
+  cardTemplateConfig?: TemplateConfig | null;
 }
 
 export type UpdateEventResponse = ApiResponse<Event>;
 
 export type DeleteEventResponse = ApiResponse<null>;
+
+// Card Designs API types
+export type GetCardDesignsResponse = ApiResponse<CardDesign[]>;
+
+export interface CreateCardDesignBody {
+  name: string;
+  thumbnailUrl: string;
+  templateUrl: string;
+}
+
+export type CreateCardDesignResponse = ApiResponse<CardDesign>;
+
+export interface UpdateCardDesignBody {
+  name?: string;
+  thumbnailUrl?: string;
+  templateUrl?: string;
+  templateConfig?: TemplateConfig | null;
+}
+
+export type UpdateCardDesignResponse = ApiResponse<CardDesign>;
+
+export type GetCardDesignResponse = ApiResponse<CardDesign>;
 

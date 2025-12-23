@@ -29,7 +29,14 @@ export function useEvents(eventsSDK: EventsSDK) {
   const updateEvent = useCallback(
     async (
       id: string,
-      data: { name?: string; date?: string; location?: string; description?: string }
+      data: { 
+        name?: string; 
+        date?: string; 
+        location?: string; 
+        description?: string;
+        cardDesignImageUrl?: string | null;
+        cardTemplateConfig?: any;
+      }
     ): Promise<Event | null> => {
       return await eventsSDK.updateEvent(id, data);
     },

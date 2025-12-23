@@ -91,7 +91,14 @@ export class EventsSDK {
 
   async updateEvent(
     id: string,
-    data: { name?: string; date?: string; location?: string; description?: string }
+    data: { 
+      name?: string; 
+      date?: string; 
+      location?: string; 
+      description?: string;
+      cardDesignImageUrl?: string | null;
+      cardTemplateConfig?: any;
+    }
   ): Promise<Event | null> {
     this.state = { ...this.state, isUpdating: true, error: null };
     this.notify();

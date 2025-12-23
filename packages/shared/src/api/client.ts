@@ -19,12 +19,19 @@ import type {
   UpdateEventBody,
   UpdateEventResponse,
   DeleteEventResponse,
+  GetCardDesignsResponse,
+  GetCardDesignResponse,
+  CreateCardDesignBody,
+  CreateCardDesignResponse,
+  UpdateCardDesignBody,
+  UpdateCardDesignResponse,
 } from './types';
 import {
   AUTH_REQUEST_CODE,
   AUTH_VERIFY_CODE,
   EVENTS_BASE,
   GUESTS_BASE,
+  CARD_DESIGNS_BASE,
 } from './paths';
 
 export interface ApiClientConfig {
@@ -155,6 +162,33 @@ export class ApiClient {
     return this.request<null>(`${EVENTS_BASE}/${id}`, {
       method: 'DELETE',
     }) as Promise<DeleteEventResponse>;
+  }
+
+  // Card Designs endpoints
+  async getCardDesigns(): Promise<GetCardDesignsResponse> {
+    return this.request<GetCardDesignsResponse['data']>(CARD_DESIGNS_BASE, {
+      method: 'GET',
+    }) as Promise<GetCardDesignsResponse>;
+  }
+
+  async getCardDesign(id: string): Promise<GetCardDesignResponse> {
+    return this.request<GetCardDesignResponse['data']>(`${CARD_DESIGNS_BASE}/${id}`, {
+      method: 'GET',
+    }) as Promise<GetCardDesignResponse>;
+  }
+
+  async createCardDesign(body: CreateCardDesignBody): Promise<CreateCardDesignResponse> {
+    return this.request<CreateCardDesignResponse['data']>(CARD_DESIGNS_BASE, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }) as Promise<CreateCardDesignResponse>;
+  }
+
+  async updateCardDesign(id: string, body: UpdateCardDesignBody): Promise<UpdateCardDesignResponse> {
+    return this.request<UpdateCardDesignResponse['data']>(`${CARD_DESIGNS_BASE}/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }) as Promise<UpdateCardDesignResponse>;
   }
 }
 

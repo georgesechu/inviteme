@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Label } from '../components/ui/label';
 import { Alert } from '../components/ui/alert';
 import { Spinner } from '../components/ui/spinner';
-import { LogOut, Plus, RefreshCw, Trash2, User, ArrowLeft } from 'lucide-react';
+import { LogOut, Plus, RefreshCw, Trash2, User, ArrowLeft, Image } from 'lucide-react';
 
 export function EventGuestsPage() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -51,6 +51,7 @@ export function EventGuestsPage() {
     auth.logout();
     window.location.href = '/';
   };
+
 
   if (!eventId) {
     return (
@@ -150,6 +151,51 @@ export function EventGuestsPage() {
               <Alert variant="error" className="mt-4">
                 {guests.error}
               </Alert>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Card Design</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {currentEvent?.cardDesignImageUrl ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <img
+                    src={currentEvent.cardDesignImageUrl}
+                    alt="Card design"
+                    className="h-32 w-auto rounded border border-slate-200"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-600">
+                      Card design uploaded. Configure name and QR code placement.
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="mt-2"
+                      onClick={() => navigate(`/template-builder/${eventId}`)}
+                    >
+                      <Image className="mr-2 h-4 w-4" />
+                      Configure Placement
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-slate-600">
+                  Upload your card design image, then configure where to place the guest name and QR code.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate(`/template-builder/${eventId}`)}
+                >
+                  <Image className="mr-2 h-4 w-4" />
+                  Upload & Configure Design
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>

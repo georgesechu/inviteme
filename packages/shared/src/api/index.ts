@@ -31,3 +31,12 @@ export type {
   DeleteEventResponse,
 } from './events';
 
+export type {
+  GetCardDesignsResponse,
+  GetCardDesignResponse,
+  CreateCardDesignBody,
+  CreateCardDesignResponse,
+  UpdateCardDesignBody,
+  UpdateCardDesignResponse,
+} from './cardDesigns';
+

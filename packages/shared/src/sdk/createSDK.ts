@@ -5,6 +5,7 @@ import { createApiClient, type ApiClientConfig } from '../api/client';
 import { AuthSDK } from './auth';
 import { GuestsSDK } from './guests';
 import { EventsSDK } from './events';
+import { CardDesignsSDK } from './cardDesigns';
 import type { StorageAdapter } from './storage';
 import { BrowserStorageAdapter } from './storage';
 
@@ -16,6 +17,7 @@ export interface SDK {
   auth: AuthSDK;
   guests: GuestsSDK;
   events: EventsSDK;
+  cardDesigns: CardDesignsSDK;
 }
 
 /**
@@ -35,11 +37,13 @@ export function createSDK(config: SDKConfig): SDK {
   const auth = new AuthSDK(api, storage);
   const guests = new GuestsSDK(api);
   const events = new EventsSDK(api);
+  const cardDesigns = new CardDesignsSDK(api);
 
   return {
     auth,
     guests,
     events,
+    cardDesigns,
   };
 }
 
