@@ -30,7 +30,7 @@ export function LoginPage() {
   const handleVerifyCode = async () => {
     const success = await auth.verifyCode(phoneNumber, code);
     if (success) {
-      navigate('/guests');
+      navigate('/events');
     }
   };
 

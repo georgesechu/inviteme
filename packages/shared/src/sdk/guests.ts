@@ -9,6 +9,7 @@ export class GuestsSDK {
   private api: ApiClient;
   private state: GuestsState;
   private stateListeners: Set<(state: GuestsState) => void> = new Set();
+  private currentEventId: string | null = null;
 
   constructor(api: ApiClient) {
     this.api = api;
@@ -41,10 +42,25 @@ export class GuestsSDK {
     this.stateListeners.forEach(listener => listener(this.getState()));
   }
 
+  setEvent(eventId: string) {
+    this.currentEventId = eventId;
+  }
+
+  getEvent(): string | null {
+    return this.currentEventId;
+  }
+
   /**
-   * Load all guests
+   * Load all guests for the current event
    */
-  async loadGuests(): Promise<void> {
+  async loadGuests(eventId?: string): Promise<void> {
+    const targetEventId = eventId || this.currentEventId;
+    if (!targetEventId) {
+      this.state = { ...this.state, error: 'No event selected' };
+      this.notifyListeners();
+      return;
+    }
+    this.currentEventId = targetEventId;
     this.state = {
       ...this.state,
       isLoading: true,
@@ -53,7 +69,7 @@ export class GuestsSDK {
     this.notifyListeners();
 
     try {
-      const response = await this.api.getGuests();
+      const response = await this.api.getGuests(targetEventId);
 
       if (response.success && response.data) {
         this.state = {
@@ -83,7 +99,19 @@ export class GuestsSDK {
   /**
    * Create a new guest
    */
-  async createGuest(name: string, mobile: string, type: GuestType): Promise<Guest | null> {
+  async createGuest(
+    name: string,
+    mobile: string,
+    type: GuestType,
+    eventId?: string
+  ): Promise<Guest | null> {
+    const targetEventId = eventId || this.currentEventId;
+    if (!targetEventId) {
+      this.state = { ...this.state, error: 'No event selected' };
+      this.notifyListeners();
+      return null;
+    }
+    this.currentEventId = targetEventId;
     this.state = {
       ...this.state,
       isCreating: true,
@@ -92,7 +120,7 @@ export class GuestsSDK {
     this.notifyListeners();
 
     try {
-      const response = await this.api.createGuest({ name, mobile, type });
+      const response = await this.api.createGuest({ eventId: targetEventId, name, mobile, type });
 
       if (response.success && response.data) {
         const newGuest = response.data;
@@ -129,8 +157,16 @@ export class GuestsSDK {
    */
   async updateGuest(
     id: string,
-    updates: { name?: string; mobile?: string; type?: GuestType }
+    updates: { name?: string; mobile?: string; type?: GuestType },
+    eventId?: string
   ): Promise<Guest | null> {
+    const targetEventId = eventId || this.currentEventId;
+    if (!targetEventId) {
+      this.state = { ...this.state, error: 'No event selected' };
+      this.notifyListeners();
+      return null;
+    }
+    this.currentEventId = targetEventId;
     this.state = {
       ...this.state,
       isUpdating: true,
@@ -139,7 +175,7 @@ export class GuestsSDK {
     this.notifyListeners();
 
     try {
-      const response = await this.api.updateGuest(id, updates);
+      const response = await this.api.updateGuest(id, { ...updates, eventId: targetEventId });
 
       if (response.success && response.data) {
         const updatedGuest = response.data;
@@ -174,7 +210,14 @@ export class GuestsSDK {
   /**
    * Delete a guest
    */
-  async deleteGuest(id: string): Promise<boolean> {
+  async deleteGuest(id: string, eventId?: string): Promise<boolean> {
+    const targetEventId = eventId || this.currentEventId;
+    if (!targetEventId) {
+      this.state = { ...this.state, error: 'No event selected' };
+      this.notifyListeners();
+      return false;
+    }
+    this.currentEventId = targetEventId;
     this.state = {
       ...this.state,
       isDeleting: true,
@@ -183,7 +226,7 @@ export class GuestsSDK {
     this.notifyListeners();
 
     try {
-      const response = await this.api.deleteGuest(id);
+      const response = await this.api.deleteGuest(id, targetEventId);
 
       if (response.success) {
         this.state = {

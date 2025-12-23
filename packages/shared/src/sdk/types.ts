@@ -1,7 +1,7 @@
 /**
  * SDK state types
  */
-import type { User, Guest } from '../types';
+import type { User, Guest, Event } from '../types';
 
 export interface AuthState {
   user: User | null;
@@ -30,5 +30,14 @@ export interface VerifyCodeState {
   isLoading: boolean;
   error: string | null;
   success: boolean;
+}
+
+export interface EventsState {
+  events: Event[];
+  isLoading: boolean;
+  error: string | null;
+  isCreating: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
 }
 

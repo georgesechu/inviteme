@@ -5,4 +5,5 @@
 export * from './useAuth';
 export * from './useGuests';
 export * from './SDKContext';
+export * from './useEvents';
 

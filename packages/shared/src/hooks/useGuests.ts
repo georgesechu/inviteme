@@ -7,7 +7,7 @@ import type { GuestsSDK } from '../sdk/guests';
 import type { Guest, GuestType } from '../types';
 import type { GuestsState } from '../sdk/types';
 
-export function useGuests(guestsSDK: GuestsSDK) {
+export function useGuests(guestsSDK: GuestsSDK, eventId?: string) {
   const [state, setState] = useState<GuestsState>(guestsSDK.getState());
 
   useEffect(() => {
@@ -15,16 +15,19 @@ export function useGuests(guestsSDK: GuestsSDK) {
     return unsubscribe;
   }, [guestsSDK]);
 
-  // Load guests on mount
+  // Load guests when event changes
   useEffect(() => {
-    guestsSDK.loadGuests();
-  }, [guestsSDK]);
+    if (eventId) {
+      guestsSDK.setEvent(eventId);
+      guestsSDK.loadGuests(eventId);
+    }
+  }, [guestsSDK, eventId]);
 
   const createGuest = useCallback(
     async (name: string, mobile: string, type: GuestType): Promise<Guest | null> => {
-      return await guestsSDK.createGuest(name, mobile, type);
+      return await guestsSDK.createGuest(name, mobile, type, eventId);
     },
-    [guestsSDK]
+    [guestsSDK, eventId]
   );
 
   const updateGuest = useCallback(
@@ -32,21 +35,23 @@ export function useGuests(guestsSDK: GuestsSDK) {
       id: string,
       updates: { name?: string; mobile?: string; type?: GuestType }
     ): Promise<Guest | null> => {
-      return await guestsSDK.updateGuest(id, updates);
+      return await guestsSDK.updateGuest(id, updates, eventId);
     },
-    [guestsSDK]
+    [guestsSDK, eventId]
   );
 
   const deleteGuest = useCallback(
     async (id: string): Promise<boolean> => {
-      return await guestsSDK.deleteGuest(id);
+      return await guestsSDK.deleteGuest(id, eventId);
     },
-    [guestsSDK]
+    [guestsSDK, eventId]
   );
 
   const reloadGuests = useCallback(() => {
-    guestsSDK.loadGuests();
-  }, [guestsSDK]);
+    if (eventId) {
+      guestsSDK.loadGuests(eventId);
+    }
+  }, [guestsSDK, eventId]);
 
   const getGuestById = useCallback(
     (id: string): Guest | undefined => {

@@ -12,6 +12,7 @@ export * from './utils/validation';
 
 // API
 export * from './api';
+export * from './api/events';
 
 // SDK
 export * from './sdk';

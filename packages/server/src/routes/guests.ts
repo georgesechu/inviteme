@@ -1,32 +1,42 @@
 /**
- * Guest management routes
+ * Guest management routes (scoped by event)
  */
 import { Router, Response } from 'express';
-import {
-  Guest,
-  GuestType,
-  ApiResponse,
-  normalizeCode,
-  generateCode,
-  CreateGuestBody,
-  UpdateGuestBody,
-} from '@inviteme/shared';
+import { Guest, GuestType, ApiResponse, normalizeCode, generateCode } from '@inviteme/shared';
+// eslint-disable-next-line import/named, import/no-unresolved
+import type { CreateGuestBody, UpdateGuestBody } from '@inviteme/shared/dist/api/types';
 import { prisma } from '../config/database';
 import { authenticate, AuthRequest } from '../middleware/auth';
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 // All routes require authentication
 router.use(authenticate);
 
+type EventAccessResult =
+  | { ok: true; event: { id: string; userId: string } }
+  | { ok: false; status: number; error: string };
+
+async function ensureEventAccess(eventId: string, userId: string): Promise<EventAccessResult> {
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
+  if (!event) return { ok: false, status: 404, error: 'Event not found' };
+  if (event.userId !== userId) return { ok: false, status: 403, error: 'Access denied' };
+  return { ok: true, event: { id: event.id, userId: event.userId } };
+}
+
 /**
- * GET /api/guests
- * Get all guests for the authenticated user
+ * GET /api/events/:eventId/guests
  */
 router.get('/', async (req: AuthRequest, res: Response) => {
   try {
+    const { eventId } = req.params;
+    const access = await ensureEventAccess(eventId, req.user!.id);
+    if (!access.ok) {
+      return res.status(access.status).json({ success: false, error: access.error } as ApiResponse<null>);
+    }
+
     const guests = await prisma.guest.findMany({
-      where: { userId: req.user!.id },
+      where: { userId: req.user!.id, eventId },
       orderBy: { createdAt: 'desc' },
     });
     return res.json({
@@ -43,11 +53,16 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 });
 
 /**
- * POST /api/guests
- * Create a new guest
+ * POST /api/events/:eventId/guests
  */
 router.post('/', async (req: AuthRequest, res: Response) => {
   try {
+    const { eventId } = req.params;
+    const access = await ensureEventAccess(eventId, req.user!.id);
+    if (!access.ok) {
+      return res.status(access.status).json({ success: false, error: access.error } as ApiResponse<null>);
+    }
+
     const { name, mobile, type } = req.body as CreateGuestBody;
 
     if (!name || !mobile || !type) {
@@ -84,6 +99,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
     const created = await prisma.guest.create({
       data: {
         userId: req.user!.id,
+        eventId,
         name: name.trim(),
         mobile: mobile.trim(),
         type,
@@ -105,16 +121,20 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 });
 
 /**
- * PUT /api/guests/:id
- * Update a guest
+ * PUT /api/events/:eventId/guests/:id
  */
 router.put('/:id', async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id, eventId } = req.params;
+    const access = await ensureEventAccess(eventId, req.user!.id);
+    if (!access.ok) {
+      return res.status(access.status).json({ success: false, error: access.error } as ApiResponse<null>);
+    }
+
     const { name, mobile, type } = req.body as UpdateGuestBody;
 
     const guest = await prisma.guest.findUnique({ where: { id } });
-    if (!guest) {
+    if (!guest || guest.eventId !== eventId) {
       return res.status(404).json({
         success: false,
         error: 'Guest not found',
@@ -155,15 +175,18 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
 });
 
 /**
- * DELETE /api/guests/:id
- * Delete a guest
+ * DELETE /api/events/:eventId/guests/:id
  */
 router.delete('/:id', async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id, eventId } = req.params;
+    const access = await ensureEventAccess(eventId, req.user!.id);
+    if (!access.ok) {
+      return res.status(access.status).json({ success: false, error: access.error } as ApiResponse<null>);
+    }
 
     const guest = await prisma.guest.findUnique({ where: { id } });
-    if (!guest) {
+    if (!guest || guest.eventId !== eventId) {
       return res.status(404).json({
         success: false,
         error: 'Guest not found',

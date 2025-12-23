@@ -1,7 +1,7 @@
 /**
  * API request/response types
  */
-import type { User, Guest } from '../types';
+import type { User, Guest, Event } from '../types';
 import type { ApiResponse } from '../types';
 
 // Re-export ApiResponse for convenience
@@ -28,6 +28,7 @@ export interface AuthVerifyCodeResponse extends ApiResponse<{
 export type GetGuestsResponse = ApiResponse<Guest[]>;
 
 export interface CreateGuestBody {
+  eventId: string;
   name: string;
   mobile: string;
   type: 'Single' | 'Double';
@@ -36,6 +37,7 @@ export interface CreateGuestBody {
 export type CreateGuestResponse = ApiResponse<Guest>;
 
 export interface UpdateGuestBody {
+  eventId?: string;
   name?: string;
   mobile?: string;
   type?: 'Single' | 'Double';
@@ -44,4 +46,27 @@ export interface UpdateGuestBody {
 export type UpdateGuestResponse = ApiResponse<Guest>;
 
 export type DeleteGuestResponse = ApiResponse<null>;
+
+// Events API types
+export type GetEventsResponse = ApiResponse<Event[]>;
+
+export interface CreateEventBody {
+  name: string;
+  date?: string;
+  location?: string;
+  description?: string;
+}
+
+export type CreateEventResponse = ApiResponse<Event>;
+
+export interface UpdateEventBody {
+  name?: string;
+  date?: string;
+  location?: string;
+  description?: string;
+}
+
+export type UpdateEventResponse = ApiResponse<Event>;
+
+export type DeleteEventResponse = ApiResponse<null>;
 

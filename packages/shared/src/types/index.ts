@@ -7,10 +7,22 @@ export type GuestType = 'Single' | 'Double';
 export interface Guest {
   id: string;
   userId: string;
+  eventId: string;
   name: string;
   mobile: string;
   type: GuestType;
   code: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Event {
+  id: string;
+  userId: string;
+  name: string;
+  date?: Date;
+  location?: string;
+  description?: string;
   createdAt: Date;
   updatedAt: Date;
 }

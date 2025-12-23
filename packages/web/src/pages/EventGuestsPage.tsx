@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth, useGuests, useEvents } from '@inviteme/shared';
 import { useSDK } from '../sdk';
 import { Button } from '../components/ui/button';
@@ -8,31 +9,30 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Label } from '../components/ui/label';
 import { Alert } from '../components/ui/alert';
 import { Spinner } from '../components/ui/spinner';
-import { LogOut, Plus, RefreshCw, Trash2, User } from 'lucide-react';
+import { LogOut, Plus, RefreshCw, Trash2, User, ArrowLeft } from 'lucide-react';
 
-export function GuestsPage() {
+export function EventGuestsPage() {
+  const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
   const sdk = useSDK();
   const auth = useAuth(sdk.auth);
   const events = useEvents(sdk.events);
-  const [selectedEventId, setSelectedEventId] = useState<string | undefined>(undefined);
-  const guests = useGuests(sdk.guests, selectedEventId);
+  const guests = useGuests(sdk.guests, eventId);
   const [guestName, setGuestName] = useState('');
   const [guestMobile, setGuestMobile] = useState('+2557');
   const [guestType, setGuestType] = useState<'Single' | 'Double'>('Single');
-  const [eventName, setEventName] = useState('');
-  const [eventDate, setEventDate] = useState('');
-  const [eventLocation, setEventLocation] = useState('');
-  const [eventDescription, setEventDescription] = useState('');
 
-  // When events load, pick the first one if none selected
+  const currentEvent = events.getEventById(eventId || '');
+
+  // Load guests when event is selected
   useEffect(() => {
-    if (events.events.length > 0 && !selectedEventId) {
-      setSelectedEventId(events.events[0].id);
+    if (eventId && auth.isAuthenticated) {
+      guests.reloadGuests();
     }
-  }, [events.events, selectedEventId]);
+  }, [eventId, auth.isAuthenticated]);
 
   const handleCreateGuest = async () => {
-    if (!guestName.trim() || !guestMobile.trim() || !selectedEventId) return;
+    if (!guestName.trim() || !guestMobile.trim() || !eventId) return;
     const success = await guests.createGuest(guestName.trim(), guestMobile.trim(), guestType);
     if (success) {
       setGuestName('');
@@ -47,35 +47,34 @@ export function GuestsPage() {
     }
   };
 
-  const handleCreateEvent = async () => {
-    if (!eventName.trim()) return;
-    const created = await events.createEvent({
-      name: eventName.trim(),
-      date: eventDate || undefined,
-      location: eventLocation || undefined,
-      description: eventDescription || undefined,
-    });
-    if (created) {
-      setSelectedEventId(created.id);
-      setEventName('');
-      setEventDate('');
-      setEventLocation('');
-      setEventDescription('');
-    }
-  };
-
   const handleLogout = () => {
     auth.logout();
     window.location.href = '/';
   };
 
+  if (!eventId) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Alert variant="error">Event not found</Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">InviteMe</h1>
-            <p className="text-sm text-slate-600">Wedding Invitation Management</p>
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="sm" onClick={() => navigate('/events')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Events
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">
+                {currentEvent?.name || 'Event Guests'}
+              </h1>
+              <p className="text-sm text-slate-600">Manage guests for this event</p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
@@ -91,106 +90,6 @@ export function GuestsPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-8">
-        <div className="mb-6">
-          <h2 className="text-3xl font-bold text-slate-900">Guest Management</h2>
-          <p className="mt-1 text-slate-600">Add and manage your wedding guests</p>
-        </div>
-
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Events</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-[1.5fr,auto] md:items-end">
-              <div className="space-y-2">
-                <Label htmlFor="event-select">Select Event</Label>
-                <Select
-                  id="event-select"
-                  value={selectedEventId}
-                  onChange={(e) => setSelectedEventId(e.target.value)}
-                  disabled={events.isLoading || events.events.length === 0}
-                >
-                  {events.events.map((ev) => (
-                    <option key={ev.id} value={ev.id}>
-                      {ev.name}
-                    </option>
-                  ))}
-                </Select>
-                {events.error && <Alert variant="error">{events.error}</Alert>}
-              </div>
-              <Button
-                variant="secondary"
-                onClick={events.reloadEvents}
-                disabled={events.isLoading}
-                size="sm"
-                className="h-10"
-              >
-                {events.isLoading ? (
-                  <Spinner />
-                ) : (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Refresh
-                  </>
-                )}
-              </Button>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-[1.5fr,1fr,1fr,auto] md:items-end">
-              <div className="space-y-2">
-                <Label htmlFor="event-name">Create Event</Label>
-                <Input
-                  id="event-name"
-                  value={eventName}
-                  onChange={(e) => setEventName(e.target.value)}
-                  placeholder="Event name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="event-date">Date (optional)</Label>
-                <Input
-                  id="event-date"
-                  type="date"
-                  value={eventDate}
-                  onChange={(e) => setEventDate(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="event-location">Location (optional)</Label>
-                <Input
-                  id="event-location"
-                  value={eventLocation}
-                  onChange={(e) => setEventLocation(e.target.value)}
-                  placeholder="Dar es Salaam"
-                />
-              </div>
-              <Button
-                onClick={handleCreateEvent}
-                disabled={events.isCreating || !eventName.trim()}
-                className="h-10"
-              >
-                {events.isCreating ? (
-                  <Spinner />
-                ) : (
-                  <>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Event
-                  </>
-                )}
-              </Button>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="event-description">Description (optional)</Label>
-              <Input
-                id="event-description"
-                value={eventDescription}
-                onChange={(e) => setEventDescription(e.target.value)}
-                placeholder="Notes about this event"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Add New Guest</CardTitle>
@@ -234,9 +133,7 @@ export function GuestsPage() {
               </div>
               <Button
                 onClick={handleCreateGuest}
-                disabled={
-                  guests.isCreating || !guestName.trim() || !guestMobile.trim() || !selectedEventId
-                }
+                disabled={guests.isCreating || !guestName.trim() || !guestMobile.trim()}
                 className="h-10"
               >
                 {guests.isCreating ? (

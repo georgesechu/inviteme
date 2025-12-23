@@ -19,6 +19,20 @@ async function main() {
 
   console.log('✅ Created test user:', user.id);
 
+  // Create a sample event for the user
+  const event = await prisma.event.upsert({
+    where: { id: 'sample-event' },
+    update: {},
+    create: {
+      id: 'sample-event',
+      userId: user.id,
+      name: 'Sample Wedding',
+      location: 'Dar es Salaam',
+    },
+  });
+
+  console.log('✅ Created sample event:', event.id);
+
   // Create a test card design
   const cardDesign = await prisma.cardDesign.upsert({
     where: { id: 'default-design' },

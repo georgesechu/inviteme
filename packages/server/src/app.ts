@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import guestRoutes from './routes/guests';
+import eventRoutes from './routes/events';
 import cardDesignRoutes from './routes/cardDesigns';
 import invitationRoutes from './routes/invitations';
 import paymentRoutes from './routes/payments';
@@ -28,7 +29,8 @@ app.get('/api', (_req: Request, res: Response) => {
 });
 
 app.use('/api/auth', authRoutes);
-app.use('/api/guests', guestRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/events/:eventId/guests', guestRoutes);
 app.use('/api/card-designs', cardDesignRoutes);
 app.use('/api/invitations', invitationRoutes);
 app.use('/api/payments', paymentRoutes);

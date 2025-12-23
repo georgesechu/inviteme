@@ -13,10 +13,17 @@ import type {
   UpdateGuestResponse,
   GetGuestsResponse,
   DeleteGuestResponse,
+  GetEventsResponse,
+  CreateEventBody,
+  CreateEventResponse,
+  UpdateEventBody,
+  UpdateEventResponse,
+  DeleteEventResponse,
 } from './types';
 import {
   AUTH_REQUEST_CODE,
   AUTH_VERIFY_CODE,
+  EVENTS_BASE,
   GUESTS_BASE,
 } from './paths';
 
@@ -90,30 +97,64 @@ export class ApiClient {
   }
 
   // Guest endpoints
-  async getGuests(): Promise<GetGuestsResponse> {
-    return this.request<GetGuestsResponse['data']>(GUESTS_BASE, {
+  async getGuests(eventId: string): Promise<GetGuestsResponse> {
+    const path = GUESTS_BASE.replace(':eventId', eventId);
+    return this.request<GetGuestsResponse['data']>(path, {
       method: 'GET',
     }) as Promise<GetGuestsResponse>;
   }
 
   async createGuest(body: CreateGuestBody): Promise<CreateGuestResponse> {
-    return this.request<CreateGuestResponse['data']>(GUESTS_BASE, {
+    const path = GUESTS_BASE.replace(':eventId', body.eventId);
+    return this.request<CreateGuestResponse['data']>(path, {
       method: 'POST',
       body: JSON.stringify(body),
     }) as Promise<CreateGuestResponse>;
   }
 
   async updateGuest(id: string, body: UpdateGuestBody): Promise<UpdateGuestResponse> {
-    return this.request<UpdateGuestResponse['data']>(`${GUESTS_BASE}/${id}`, {
+    if (!body.eventId) {
+      throw new Error('eventId is required to update a guest');
+    }
+    const path = `${GUESTS_BASE.replace(':eventId', body.eventId)}/${id}`;
+    return this.request<UpdateGuestResponse['data']>(path, {
       method: 'PUT',
       body: JSON.stringify(body),
     }) as Promise<UpdateGuestResponse>;
   }
 
-  async deleteGuest(id: string): Promise<DeleteGuestResponse> {
-    return this.request<null>(`${GUESTS_BASE}/${id}`, {
+  async deleteGuest(id: string, eventId: string): Promise<DeleteGuestResponse> {
+    const path = `${GUESTS_BASE.replace(':eventId', eventId)}/${id}`;
+    return this.request<null>(path, {
       method: 'DELETE',
     }) as Promise<DeleteGuestResponse>;
+  }
+
+  // Events endpoints
+  async getEvents(): Promise<GetEventsResponse> {
+    return this.request<GetEventsResponse['data']>(EVENTS_BASE, {
+      method: 'GET',
+    }) as Promise<GetEventsResponse>;
+  }
+
+  async createEvent(body: CreateEventBody): Promise<CreateEventResponse> {
+    return this.request<CreateEventResponse['data']>(EVENTS_BASE, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }) as Promise<CreateEventResponse>;
+  }
+
+  async updateEvent(id: string, body: UpdateEventBody): Promise<UpdateEventResponse> {
+    return this.request<UpdateEventResponse['data']>(`${EVENTS_BASE}/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }) as Promise<UpdateEventResponse>;
+  }
+
+  async deleteEvent(id: string): Promise<DeleteEventResponse> {
+    return this.request<null>(`${EVENTS_BASE}/${id}`, {
+      method: 'DELETE',
+    }) as Promise<DeleteEventResponse>;
   }
 }
 

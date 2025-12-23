@@ -22,3 +22,12 @@ export type {
   DeleteGuestResponse,
 } from './guests';
 
+export type {
+  GetEventsResponse,
+  CreateEventBody,
+  CreateEventResponse,
+  UpdateEventBody,
+  UpdateEventResponse,
+  DeleteEventResponse,
+} from './events';
+

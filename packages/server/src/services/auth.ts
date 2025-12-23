@@ -5,7 +5,8 @@ import { prisma } from '../config/database';
 import { sendLoginCode } from './twilioClient';
 import { formatTanzanianPhone } from '@inviteme/shared';
 import { generateToken, verifyToken as verifyJWT } from './jwt';
-import type { User as PrismaUser } from '@prisma/client';
+// eslint-disable-next-line import/named, import/no-unresolved
+import type { User } from '.prisma/client';
 
 /**
  * Generate a random 6-digit code
@@ -58,7 +59,7 @@ export async function requestLoginCode(
 export async function verifyLoginCode(
   phoneNumber: string,
   code: string
-): Promise<{ success: boolean; user?: PrismaUser; token?: string }> {
+): Promise<{ success: boolean; user?: User; token?: string }> {
   const formattedPhone = formatTanzanianPhone(phoneNumber);
   if (!formattedPhone) {
     return { success: false };
@@ -101,7 +102,7 @@ export async function verifyLoginCode(
 /**
  * Async token verification (used by middleware)
  */
-export async function verifyTokenAsync(token: string): Promise<PrismaUser | null> {
+export async function verifyTokenAsync(token: string): Promise<User | null> {
   try {
     const payload = verifyJWT(token);
     if (!payload) {

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from './pages/LoginPage';
-import { GuestsPage } from './pages/GuestsPage';
+import { EventsPage } from './pages/EventsPage';
+import { EventGuestsPage } from './pages/EventGuestsPage';
 import { Layout } from './components/Layout';
 
 function App() {
@@ -10,8 +11,9 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<LoginPage />} />
         </Route>
-        <Route path="/guests" element={<Layout requireAuth />}>
-          <Route index element={<GuestsPage />} />
+        <Route path="/events" element={<Layout requireAuth />}>
+          <Route index element={<EventsPage />} />
+          <Route path=":eventId" element={<EventGuestsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
