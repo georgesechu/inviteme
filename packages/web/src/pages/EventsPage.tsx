@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Label } from '../components/ui/label';
 import { Alert } from '../components/ui/alert';
 import { Spinner } from '../components/ui/spinner';
-import { LogOut, Plus, Calendar, MapPin, FileText, Trash2 } from 'lucide-react';
+import { Plus, Calendar, MapPin, FileText, Trash2 } from 'lucide-react';
 
 export function EventsPage() {
   const navigate = useNavigate();
@@ -53,10 +53,6 @@ export function EventsPage() {
     }
   };
 
-  const handleLogout = () => {
-    auth.logout();
-    window.location.href = '/';
-  };
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return null;
@@ -70,25 +66,6 @@ export function EventsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">InviteMe</h1>
-            <p className="text-sm text-slate-600">Wedding Invitation Management</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <div className="text-sm font-medium text-slate-900">{auth.user?.phoneNumber}</div>
-              <div className="text-xs text-slate-500">Logged in</div>
-            </div>
-            <Button variant="secondary" onClick={handleLogout} size="sm">
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="mb-6">
           <h2 className="text-3xl font-bold text-slate-900">My Events</h2>
@@ -113,7 +90,7 @@ export function EventsPage() {
                   id="event-name"
                   value={eventName}
                   onChange={(e) => setEventName(e.target.value)}
-                  placeholder="e.g., James Wedding"
+                  placeholder="e.g., Company Annual Dinner"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && eventName.trim()) handleCreateEvent();
                   }}

@@ -4,7 +4,7 @@ import { cn } from '../../lib/utils';
 type Variant = 'info' | 'success' | 'error';
 
 const variantClasses: Record<Variant, string> = {
-  info: 'bg-blue-50 text-blue-900 border-blue-200',
+  info: 'bg-green-50 text-green-900 border-green-200',
   success: 'bg-green-50 text-green-900 border-green-200',
   error: 'bg-red-50 text-red-900 border-red-200',
 };

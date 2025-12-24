@@ -2,12 +2,11 @@ import { useEffect, useState } from 'react';
 import { useAccount } from '@inviteme/shared';
 import { useSDK } from '../sdk';
 import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Label } from '../components/ui/label';
 import { Alert } from '../components/ui/alert';
 import { Spinner } from '../components/ui/spinner';
-import { MessageSquare, CreditCard, CheckCircle, XCircle } from 'lucide-react';
+import { MessageSquare, CreditCard } from 'lucide-react';
 
 // Predefined message bundles
 const MESSAGE_BUNDLES = [
@@ -72,7 +71,7 @@ export function AccountPage() {
                 <div>
                   <Label className="text-slate-500">Message Credits</Label>
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5 text-blue-600" />
+                    <MessageSquare className="h-5 w-5 text-green-600" />
                     <p className="text-2xl font-bold text-slate-900">
                       {account.account.messageCredits}
                     </p>
@@ -110,16 +109,16 @@ export function AccountPage() {
                       key={bundle.messages}
                       className={`cursor-pointer transition-all hover:shadow-md ${
                         selectedBundle?.messages === bundle.messages
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'border-green-500 bg-green-50'
                           : ''
-                      } ${bundle.popular ? 'border-2 border-blue-300' : ''}`}
+                      } ${bundle.popular ? 'border-2 border-green-300' : ''}`}
                       onClick={() => setSelectedBundle(bundle)}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-semibold text-slate-900">{bundle.label}</span>
                           {bundle.popular && (
-                            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                            <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
                               Popular
                             </span>
                           )}
@@ -139,7 +138,7 @@ export function AccountPage() {
 
               {/* Purchase Button */}
               {selectedBundle && (
-                <div className="flex items-center gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <div className="flex items-center gap-4 rounded-lg border border-green-200 bg-green-50 p-4">
                   <div className="flex-1">
                     <p className="font-semibold text-slate-900">
                       {selectedBundle.label} - ${selectedBundle.price}

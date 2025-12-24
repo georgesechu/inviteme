@@ -4,6 +4,7 @@ import { useSDK } from '../sdk';
 import { Button } from './ui/button';
 import { LogOut, User, MessageSquare } from 'lucide-react';
 import { useEffect } from 'react';
+import { Logo } from './Logo';
 
 export function Header() {
   const sdk = useSDK();
@@ -20,7 +21,7 @@ export function Header() {
 
   const handleLogout = () => {
     auth.logout();
-    navigate('/');
+    navigate('/login');
   };
 
   if (!auth.isAuthenticated) {
@@ -31,8 +32,8 @@ export function Header() {
     <header className="border-b border-slate-200 bg-white shadow-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-6">
-          <Link to="/events" className="text-xl font-bold text-slate-900">
-            InviteMe
+          <Link to="/events">
+            <Logo size="md" />
           </Link>
           <nav className="flex items-center gap-4">
             <Link
@@ -46,12 +47,12 @@ export function Header() {
 
         <div className="flex items-center gap-4">
           {/* Message Credits Display */}
-          <div className="flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-1.5">
-            <MessageSquare className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-semibold text-blue-900">
+          <div className="flex items-center gap-2 rounded-lg bg-green-50 px-3 py-1.5">
+            <MessageSquare className="h-4 w-4 text-green-600" />
+            <span className="text-sm font-semibold text-green-900">
               {account.isLoading ? '...' : account.getMessageCredits()}
             </span>
-            <span className="text-xs text-blue-600">messages</span>
+            <span className="text-xs text-green-600">messages</span>
           </div>
 
           {/* Account Link */}

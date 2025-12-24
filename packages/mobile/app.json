@@ -1,37 +1,32 @@
 {
   "expo": {
-    "name": "InviteMe",
-    "slug": "inviteme",
+    "name": "WAgeni",
+    "slug": "wageni",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#f8fafc"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.inviteme.app"
+      "bundleIdentifier": "com.wageni.app"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#16a34a"
       },
-      "package": "com.inviteme.app"
+      "package": "com.wageni.app"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
+    "web": {},
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-asset"
     ],
-    "scheme": "inviteme"
+    "scheme": "wageni"
   }
 }
-

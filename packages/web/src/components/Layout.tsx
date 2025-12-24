@@ -12,7 +12,7 @@ export function Layout({ requireAuth = false }: LayoutProps) {
   const auth = useAuth(sdk.auth);
 
   if (requireAuth && !auth.isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return (

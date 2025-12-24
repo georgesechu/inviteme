@@ -75,7 +75,7 @@ export function GuestsPage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">InviteMe</h1>
-            <p className="text-sm text-slate-600">Wedding Invitation Management</p>
+            <p className="text-sm text-slate-600">Event Invitation Management</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
@@ -93,7 +93,7 @@ export function GuestsPage() {
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="mb-6">
           <h2 className="text-3xl font-bold text-slate-900">Guest Management</h2>
-          <p className="mt-1 text-slate-600">Add and manage your wedding guests</p>
+          <p className="mt-1 text-slate-600">Add and manage your event guests</p>
         </div>
 
         <Card className="mb-6">
@@ -310,7 +310,7 @@ export function GuestsPage() {
                               <span
                                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                                   guest.type === 'Single'
-                                    ? 'bg-blue-100 text-blue-800'
+                                    ? 'bg-green-100 text-green-800'
                                     : 'bg-purple-100 text-purple-800'
                                 }`}
                               >

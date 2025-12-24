@@ -168,8 +168,8 @@ export function EventGuestsPage() {
     
     switch (status) {
       case 'sent':
-        bgColor = 'bg-blue-100';
-        textColor = 'text-blue-700';
+        bgColor = 'bg-green-100';
+        textColor = 'text-green-700';
         label = 'Sent';
         break;
       case 'delivered':
@@ -345,10 +345,22 @@ export function EventGuestsPage() {
             )}
 
             {!guests.isLoading && guests.guests.length === 0 && (
-              <Alert variant="info" className="text-center">
-                <User className="mr-2 h-4 w-4" />
-                No guests yet. Add your first guest above.
-              </Alert>
+              <div className="flex flex-col items-center justify-center py-16 px-4">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 mb-4">
+                  <User className="h-10 w-10 text-slate-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">No guests yet</h3>
+                <p className="text-sm text-slate-600 text-center max-w-sm mb-6">
+                  Get started by adding your first guest. You can add guests individually or import them in bulk.
+                </p>
+                <Button
+                  onClick={() => setIsAddModalOpen(true)}
+                  size="sm"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Your First Guest
+                </Button>
+              </div>
             )}
 
             {guests.guests.length > 0 && (
@@ -360,7 +372,7 @@ export function EventGuestsPage() {
                     className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900"
                   >
                     {selectedGuests.size === guests.guests.length ? (
-                      <CheckSquare className="h-5 w-5 text-blue-600" />
+                      <CheckSquare className="h-5 w-5 text-green-600" />
                     ) : (
                       <Square className="h-5 w-5 text-slate-400" />
                     )}
@@ -386,7 +398,7 @@ export function EventGuestsPage() {
                         key={guest.id}
                         className={`flex items-center justify-between rounded-lg border p-4 shadow-sm transition-all ${
                           isSelected
-                            ? 'border-blue-500 bg-blue-50'
+                            ? 'border-green-500 bg-green-50'
                             : 'border-slate-200 bg-white hover:shadow-md'
                         }`}
                       >
@@ -396,7 +408,7 @@ export function EventGuestsPage() {
                             className="flex-shrink-0"
                           >
                             {isSelected ? (
-                              <CheckSquare className="h-5 w-5 text-blue-600" />
+                              <CheckSquare className="h-5 w-5 text-green-600" />
                             ) : (
                               <Square className="h-5 w-5 text-slate-400" />
                             )}
@@ -414,7 +426,7 @@ export function EventGuestsPage() {
                                 <span
                                   className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                                     guest.type === 'Single'
-                                      ? 'bg-blue-100 text-blue-800'
+                                      ? 'bg-green-100 text-green-800'
                                       : 'bg-purple-100 text-purple-800'
                                   }`}
                                 >
