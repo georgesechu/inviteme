@@ -4,6 +4,8 @@
 export * from './paths';
 export * from './types';
 export * from './client';
+export * from './account';
+export * from './invitations';
 
 // Re-export types from auth and guests (paths are in paths.ts)
 export type {
@@ -30,6 +32,9 @@ export type {
   UpdateEventResponse,
   DeleteEventResponse,
 } from './events';
+
+// Re-export Event type for convenience
+export type { Event } from '../types';
 
 export type {
   GetCardDesignsResponse,

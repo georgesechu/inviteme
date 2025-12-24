@@ -7,4 +7,6 @@ export * from './auth';
 export * from './guests';
 export * from './events';
 export * from './cardDesigns';
+export * from './account';
+export * from './templates';
 

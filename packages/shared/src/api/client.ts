@@ -32,7 +32,19 @@ import {
   EVENTS_BASE,
   GUESTS_BASE,
   CARD_DESIGNS_BASE,
+  ACCOUNT_BASE,
+  ACCOUNT_PURCHASE_BUNDLE,
+  INVITATIONS_SEND,
 } from './paths';
+import type {
+  GetAccountResponse,
+  PurchaseBundleBody,
+  PurchaseBundleResponseType,
+} from './account';
+import type {
+  SendInvitationsBody,
+  SendInvitationsResponseType,
+} from './invitations';
 
 export interface ApiClientConfig {
   baseUrl: string;
@@ -189,6 +201,28 @@ export class ApiClient {
       method: 'PUT',
       body: JSON.stringify(body),
     }) as Promise<UpdateCardDesignResponse>;
+  }
+
+  // Account endpoints
+  async getAccount(): Promise<GetAccountResponse> {
+    return this.request<GetAccountResponse['data']>(ACCOUNT_BASE, {
+      method: 'GET',
+    }) as Promise<GetAccountResponse>;
+  }
+
+  async purchaseBundle(body: PurchaseBundleBody): Promise<PurchaseBundleResponseType> {
+    return this.request<PurchaseBundleResponseType['data']>(ACCOUNT_PURCHASE_BUNDLE, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }) as Promise<PurchaseBundleResponseType>;
+  }
+
+  // Invitations endpoints
+  async sendInvitations(body: SendInvitationsBody): Promise<SendInvitationsResponseType> {
+    return this.request<SendInvitationsResponseType['data']>(INVITATIONS_SEND, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }) as Promise<SendInvitationsResponseType>;
   }
 }
 

@@ -12,6 +12,11 @@ export interface Guest {
   mobile: string;
   type: GuestType;
   code: string;
+  sendStatus?: 'pending' | 'sent' | 'delivered' | 'read' | 'failed' | null;
+  messageSid?: string | null;
+  lastSentAt?: Date | null;
+  lastDeliveredAt?: Date | null;
+  lastReadAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

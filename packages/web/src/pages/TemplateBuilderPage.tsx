@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEvents } from '@inviteme/shared';
+import { useEvents, getTransform, resolveElementContent } from '@inviteme/shared';
 import { useSDK } from '../sdk';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -8,7 +8,8 @@ import { Select } from '../components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Label } from '../components/ui/label';
 import { Alert } from '../components/ui/alert';
-import { ArrowLeft, Save, Trash2, Eye, Type, QrCode, Image } from 'lucide-react';
+import { Spinner } from '../components/ui/spinner';
+import { ArrowLeft, Save, Trash2, Eye, Type, QrCode, Image, Upload } from 'lucide-react';
 import type { TemplateElement, TemplateConfig } from '@inviteme/shared';
 
 export function TemplateBuilderPage() {
@@ -22,6 +23,21 @@ export function TemplateBuilderPage() {
   const [previewMode, setPreviewMode] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
   const [templateConfig, setTemplateConfig] = useState<TemplateConfig | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0, elementX: 0, elementY: 0 });
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, size: 0 });
+  const elementRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  
+  // Helper to get full image URL
+  const getImageUrl = (url: string) => {
+    if (url.startsWith('http')) return url;
+    // If it's a relative path, use the API URL (backend serves static files)
+    return `${apiUrl}${url}`;
+  };
 
   const currentEvent = eventId ? events.getEventById(eventId) : null;
 
@@ -66,6 +82,13 @@ export function TemplateBuilderPage() {
   }, [currentEvent?.id, currentEvent?.cardDesignImageUrl, currentEvent?.cardTemplateConfig]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Don't place if we're dragging or resizing
+    if (isDragging || isResizing) {
+      setIsDragging(false);
+      setIsResizing(false);
+      return;
+    }
+    
     if (!isPlacing || !canvasRef.current || !templateConfig || !imageUrl) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
@@ -92,7 +115,7 @@ export function TemplateBuilderPage() {
           fontWeight: 'bold',
           color: '#000000',
           textAlign: 'center',
-          size: isPlacing === 'qr' ? 300 : undefined,
+          size: isPlacing === 'qr' ? 200 : undefined,
         },
         dynamic: true,
       };
@@ -105,6 +128,77 @@ export function TemplateBuilderPage() {
     }
     
     setIsPlacing(null);
+  };
+
+  const handleElementMouseDown = (elementId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!canvasRef.current || !templateConfig) return;
+    
+    const element = templateConfig.elements.find(el => el.id === elementId);
+    if (!element) return;
+    
+    const rect = canvasRef.current.getBoundingClientRect();
+    const startX = e.clientX - rect.left;
+    const startY = e.clientY - rect.top;
+    
+    setDragStart({
+      x: startX,
+      y: startY,
+      elementX: element.position.x,
+      elementY: element.position.y,
+    });
+    setIsDragging(true);
+    setSelectedElement(elementId);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging && !isResizing) return;
+    if (!canvasRef.current || !templateConfig || !selectedElement) return;
+    
+    const rect = canvasRef.current.getBoundingClientRect();
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
+    
+    if (isDragging) {
+      const deltaX = ((currentX - dragStart.x) / rect.width) * 100;
+      const deltaY = ((currentY - dragStart.y) / rect.height) * 100;
+      
+      const newX = Math.max(0, Math.min(100, dragStart.elementX + deltaX));
+      const newY = Math.max(0, Math.min(100, dragStart.elementY + deltaY));
+      
+      updateElement(selectedElement, { position: { x: newX, y: newY, anchor: templateConfig.elements.find(el => el.id === selectedElement)?.position.anchor || 'center' } });
+    } else if (isResizing) {
+      const element = templateConfig.elements.find(el => el.id === selectedElement);
+      if (!element || element.type !== 'qr') return;
+      
+      const deltaX = currentX - resizeStart.x;
+      const deltaY = currentY - resizeStart.y;
+      const delta = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+      const newSize = Math.max(50, Math.min(500, resizeStart.size + (deltaX > 0 ? delta : -delta)));
+      
+      updateElement(selectedElement, { style: { ...element.style, size: newSize } });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    setIsResizing(false);
+  };
+
+  const handleResizeMouseDown = (elementId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!templateConfig) return;
+    
+    const element = templateConfig.elements.find(el => el.id === elementId);
+    if (!element || element.type !== 'qr') return;
+    
+    setResizeStart({
+      x: e.clientX,
+      y: e.clientY,
+      size: element.style.size || 200,
+    });
+    setIsResizing(true);
+    setSelectedElement(elementId);
   };
 
   const handleElementClick = (elementId: string, e: React.MouseEvent) => {
@@ -133,6 +227,64 @@ export function TemplateBuilderPage() {
     });
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File size must be less than 10MB');
+      return;
+    }
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${apiUrl}/api/upload/image`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      
+      if (data.success && data.data?.url) {
+        const uploadedUrl = data.data.url;
+        console.log('Upload successful, URL:', uploadedUrl);
+        setImageUrl(uploadedUrl);
+        if (templateConfig) {
+          setTemplateConfig({
+            ...templateConfig,
+            baseImage: uploadedUrl,
+          });
+        }
+      } else {
+        console.error('Upload failed:', data);
+        alert('Upload failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   const handleSave = async () => {
     if (!eventId || !templateConfig || !imageUrl) {
       alert('Please upload an image and configure placement before saving.');
@@ -147,22 +299,15 @@ export function TemplateBuilderPage() {
     if (updated) {
       // Reload events to get updated data
       await events.reloadEvents();
+      console.log('Design saved, events reloaded. Updated event:', updated);
       alert('Card design saved successfully!');
-      // Don't navigate away, stay on the page so user can continue editing
+      // Navigate back to guests page to see the preview
+      navigate(`/events/${eventId}`);
     } else {
       alert('Failed to save: ' + (events.error || 'Unknown error'));
     }
   };
 
-  const handleImageUrlChange = (url: string) => {
-    setImageUrl(url);
-    if (templateConfig) {
-      setTemplateConfig({
-        ...templateConfig,
-        baseImage: url,
-      });
-    }
-  };
 
   const selectedElementData = templateConfig?.elements.find(el => el.id === selectedElement);
 
@@ -186,14 +331,17 @@ export function TemplateBuilderPage() {
   const renderPreviewContent = (element: TemplateElement): string => {
     if (!element.dynamic) return element.content || '';
     if (element.type === 'qr') return 'QR';
-    
-    const field = element.field || '';
-    const parts = field.split('.');
-    let value: any = previewData;
-    for (const part of parts) {
-      value = value?.[part];
-    }
-    return value?.toString() || field;
+
+    // Use SDK utility for resolving content
+    // Create a minimal render context for preview
+    const renderContext: any = {
+      imageWidth: 1,
+      imageHeight: 1,
+      displayWidth: 1,
+      displayHeight: 1,
+      ...previewData, // Spread preview data so fields are accessible
+    };
+    return resolveElementContent(element, renderContext);
   };
 
   if (!eventId || !currentEvent) {
@@ -243,15 +391,50 @@ export function TemplateBuilderPage() {
                 <CardTitle>Upload Design</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Label>Image URL</Label>
-                <Input
-                  type="url"
-                  placeholder="https://example.com/your-card-design.jpg"
-                  value={imageUrl}
-                  onChange={(e) => handleImageUrlChange(e.target.value)}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileUpload}
                 />
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  {isUploading ? (
+                    <>
+                      <Spinner className="mr-2 h-4 w-4" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Choose Image
+                    </>
+                  )}
+                </Button>
+                {imageUrl && (
+                  <div className="mt-2">
+                    <p className="text-xs text-slate-500 mb-2">Current image:</p>
+                    <img
+                      src={getImageUrl(imageUrl)}
+                      alt="Preview"
+                      className="w-full h-32 object-contain rounded border border-slate-200"
+                      onError={(e) => {
+                        console.error('Preview image load error:', {
+                          imageUrl,
+                          fullUrl: getImageUrl(imageUrl),
+                        });
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
                 <p className="text-xs text-slate-500">
-                  Enter the URL of your card design image. Make sure it's publicly accessible.
+                  Upload a JPG, PNG, or WebP image (max 10MB)
                 </p>
               </CardContent>
             </Card>
@@ -521,34 +704,61 @@ export function TemplateBuilderPage() {
                   className="relative bg-slate-100 cursor-crosshair"
                   style={{ aspectRatio: '2/3', maxHeight: '90vh' }}
                   onClick={handleCanvasClick}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
                 >
                   {imageUrl ? (
                     <img
-                      src={imageUrl}
+                      src={getImageUrl(imageUrl)}
                       alt="Card design"
                       className="w-full h-full object-contain"
                       draggable={false}
                       onError={() => {
-                        alert('Failed to load image. Please check the URL.');
+                        const fullUrl = getImageUrl(imageUrl);
+                        console.error('Image load error:', {
+                          imageUrl,
+                          fullUrl,
+                          apiUrl,
+                        });
+                        alert(`Failed to load image from: ${fullUrl}\n\nPlease check:\n1. Server is running on ${apiUrl}\n2. File exists at ${imageUrl}\n3. Static file serving is configured`);
+                      }}
+                      onLoad={() => {
+                        console.log('Image loaded successfully:', getImageUrl(imageUrl));
                       }}
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center text-slate-400">
                       <div className="text-center">
                         <Image className="mx-auto mb-2 h-12 w-12" />
-                        <p>Enter an image URL above to get started</p>
+                        <p>Upload an image above to get started</p>
                       </div>
                     </div>
                   )}
 
                   {/* Render elements */}
                   {templateConfig?.elements.map((element) => {
-                    const style: React.CSSProperties = {
+                    const textAlign = element.type === 'text' ? element.style.textAlign || 'center' : undefined;
+                    const anchor = element.position.anchor || 'center';
+                    
+                    // Calculate position based on alignment
+                    let left = `${element.position.x}%`;
+                    // QR codes should always be centered, regardless of text alignment
+                    let transform = element.type === 'qr' 
+                      ? getTransform(anchor, 'center') 
+                      : getTransform(anchor, textAlign);
+                    
+                    // For centered text, x is the center point
+                    // For left-aligned, x is the left edge
+                    // For right-aligned, x is the right edge
+                    
+                    const baseStyle: React.CSSProperties = {
                       position: 'absolute',
-                      left: `${element.position.x}%`,
+                      left,
                       top: `${element.position.y}%`,
-                      transform: getTransform(element.position.anchor),
+                      transform,
                       pointerEvents: 'none',
+                      zIndex: 10,
                     };
 
                     if (element.type === 'text') {
@@ -558,55 +768,138 @@ export function TemplateBuilderPage() {
                       return (
                         <div
                           key={element.id}
+                          ref={(el) => {
+                            if (el) elementRefs.current.set(element.id, el);
+                            else elementRefs.current.delete(element.id);
+                          }}
                           style={{
-                            ...style,
+                            ...baseStyle,
                             fontFamily: element.style.fontFamily || 'Arial',
                             fontSize: `${element.style.fontSize || 24}px`,
                             fontWeight: element.style.fontWeight || 'normal',
                             color: element.style.color || '#000000',
-                            textAlign: element.style.textAlign || 'center',
-                            cursor: 'pointer',
+                            textAlign: textAlign as any,
+                            cursor: isDragging ? 'grabbing' : 'grab',
                             pointerEvents: 'auto',
+                            userSelect: 'none',
                             backgroundColor:
                               selectedElement === element.id ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
                             border:
                               selectedElement === element.id ? '2px solid #3b82f6' : '1px dashed #94a3b8',
                             padding: '4px 8px',
                             borderRadius: '4px',
-                            minWidth: '100px',
+                            whiteSpace: 'nowrap',
                           }}
-                          onClick={(e) => handleElementClick(element.id, e)}
+                          onMouseDown={(e) => handleElementMouseDown(element.id, e)}
+                          onClick={(e) => {
+                            if (!isDragging) handleElementClick(element.id, e);
+                          }}
                         >
                           {content}
                         </div>
                       );
                     } else {
-                      // QR code placeholder
+                      // QR code placeholder with resize handle
+                      const size = element.style.size || 200;
+                      // Ensure minimum size for visibility - use a larger minimum
+                      const minSize = 120;
+                      const actualSize = Math.max(size, minSize);
+                      
                       return (
                         <div
                           key={element.id}
+                          ref={(el) => {
+                            if (el) elementRefs.current.set(element.id, el);
+                            else elementRefs.current.delete(element.id);
+                          }}
                           style={{
-                            ...style,
-                            width: `${element.style.size || 200}px`,
-                            height: `${element.style.size || 200}px`,
-                            cursor: 'pointer',
+                            ...baseStyle,
+                            width: `${actualSize}px`,
+                            height: `${actualSize}px`,
+                            minWidth: `${minSize}px`,
+                            minHeight: `${minSize}px`,
+                            cursor: isDragging ? 'grabbing' : 'grab',
                             pointerEvents: 'auto',
+                            userSelect: 'none',
                             backgroundColor:
                               selectedElement === element.id
-                                ? 'rgba(59, 130, 246, 0.2)'
-                                : 'rgba(255, 255, 255, 0.8)',
+                                ? 'rgba(59, 130, 246, 0.4)'
+                                : 'rgba(255, 255, 255, 1)',
                             border:
-                              selectedElement === element.id ? '2px solid #3b82f6' : '1px dashed #94a3b8',
-                            borderRadius: '4px',
+                              selectedElement === element.id 
+                                ? '3px solid #3b82f6' 
+                                : '3px dashed #64748b',
+                            borderRadius: '6px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: '12px',
-                            color: '#666',
+                            fontSize: '14px',
+                            fontWeight: 'bold',
+                            color: selectedElement === element.id ? '#1e40af' : '#475569',
+                            position: 'absolute',
+                            boxShadow: selectedElement === element.id 
+                              ? '0 4px 8px rgba(59, 130, 246, 0.4)' 
+                              : '0 2px 6px rgba(0, 0, 0, 0.2)',
+                            zIndex: selectedElement === element.id ? 20 : 10,
                           }}
-                          onClick={(e) => handleElementClick(element.id, e)}
+                          onMouseDown={(e) => {
+                            // Check if clicking on resize handle
+                            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                            const clickX = e.clientX - rect.left;
+                            const clickY = e.clientY - rect.top;
+                            const handleSize = 16;
+                            
+                            // Bottom-right corner resize handle
+                            if (clickX > actualSize - handleSize && clickY > actualSize - handleSize) {
+                              handleResizeMouseDown(element.id, e);
+                            } else {
+                              handleElementMouseDown(element.id, e);
+                            }
+                          }}
+                          onClick={(e) => {
+                            if (!isDragging && !isResizing) handleElementClick(element.id, e);
+                          }}
                         >
-                          {previewMode ? 'QR Code' : 'QR'}
+                          <div style={{ 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center', 
+                            gap: '6px',
+                            pointerEvents: 'none',
+                            width: '100%',
+                            height: '100%',
+                            justifyContent: 'center',
+                          }}>
+                            <QrCode size={Math.min(actualSize * 0.4, 80)} strokeWidth={2.5} />
+                            <span style={{ 
+                              fontSize: Math.min(actualSize * 0.08, 14),
+                              fontWeight: 'bold',
+                              textAlign: 'center',
+                            }}>
+                              {previewMode ? 'QR Code' : 'QR Code'}
+                            </span>
+                          </div>
+                          {selectedElement === element.id && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                bottom: '-2px',
+                                right: '-2px',
+                                width: '16px',
+                                height: '16px',
+                                backgroundColor: '#3b82f6',
+                                border: '2px solid white',
+                                borderRadius: '3px',
+                                cursor: 'nwse-resize',
+                                pointerEvents: 'auto',
+                                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                              }}
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                handleResizeMouseDown(element.id, e);
+                              }}
+                            />
+                          )}
                         </div>
                       );
                     }
@@ -621,18 +914,5 @@ export function TemplateBuilderPage() {
   );
 }
 
-function getTransform(anchor?: string): string {
-  switch (anchor) {
-    case 'left':
-      return 'translateY(-50%)';
-    case 'right':
-      return 'translate(-100%, -50%)';
-    case 'top':
-      return 'translateX(-50%)';
-    case 'bottom':
-      return 'translate(-50%, -100%)';
-    default:
-      return 'translate(-50%, -50%)';
-  }
-}
+// getTransform is now imported from @inviteme/shared
 

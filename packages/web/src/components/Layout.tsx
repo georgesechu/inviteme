@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@inviteme/shared';
 import { useSDK } from '../sdk';
+import { Header } from './Header';
 
 interface LayoutProps {
   requireAuth?: boolean;
@@ -14,6 +15,11 @@ export function Layout({ requireAuth = false }: LayoutProps) {
     return <Navigate to="/" replace />;
   }
 
-  return <Outlet />;
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {auth.isAuthenticated && <Header />}
+      <Outlet />
+    </div>
+  );
 }
 

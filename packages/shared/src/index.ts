@@ -17,6 +17,7 @@ export * from './api/events';
 // SDK
 export * from './sdk';
 export * from './sdk/createSDK';
+export * from './sdk/templates'; // Template utilities for card generation
 
 // Hooks (React/React Native)
 export * from './hooks';

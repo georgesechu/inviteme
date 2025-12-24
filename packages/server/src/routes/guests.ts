@@ -7,6 +7,7 @@ import { Guest, GuestType, ApiResponse, normalizeCode, generateCode } from '@inv
 import type { CreateGuestBody, UpdateGuestBody } from '@inviteme/shared/dist/api/types';
 import { prisma } from '../config/database';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { deleteGuestCard } from '../services/cardGenerator';
 
 const router = Router({ mergeParams: true });
 
@@ -200,6 +201,9 @@ router.delete('/:id', async (req: AuthRequest, res: Response) => {
         error: 'Access denied',
       } as ApiResponse<null>);
     }
+
+    // Delete associated card image
+    deleteGuestCard(guest.code);
 
     await prisma.guest.delete({ where: { id } });
 

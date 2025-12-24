@@ -3,6 +3,7 @@ import { LoginPage } from './pages/LoginPage';
 import { EventsPage } from './pages/EventsPage';
 import { EventGuestsPage } from './pages/EventGuestsPage';
 import { TemplateBuilderPage } from './pages/TemplateBuilderPage';
+import { AccountPage } from './pages/AccountPage';
 import { Layout } from './components/Layout';
 
 function App() {
@@ -15,9 +16,10 @@ function App() {
         <Route path="/events" element={<Layout requireAuth />}>
           <Route index element={<EventsPage />} />
           <Route path=":eventId" element={<EventGuestsPage />} />
+          <Route path=":eventId/design" element={<TemplateBuilderPage />} />
         </Route>
-        <Route path="/template-builder/:eventId" element={<Layout requireAuth />}>
-          <Route index element={<TemplateBuilderPage />} />
+        <Route path="/account" element={<Layout requireAuth />}>
+          <Route index element={<AccountPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

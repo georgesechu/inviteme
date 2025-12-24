@@ -1,12 +1,9 @@
-/**
- * Invitation management routes
- */
 import { Router, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
-import { ApiResponse, Invitation } from '@inviteme/shared';
+import { ApiResponse } from '@inviteme/shared';
 import { prisma } from '../config/database';
 import { authenticate, AuthRequest } from '../middleware/auth';
-import { generateCardsForInvitation } from '../services/cardGeneration';
+import { sendTemplateMessage, sendWhatsAppMedia } from '../services/twilioClient';
+import { generateGuestCard, cardExists } from '../services/cardGenerator';
 
 const router = Router();
 
@@ -14,121 +11,205 @@ const router = Router();
 router.use(authenticate);
 
 /**
- * GET /api/invitations
- * Get all invitations for the authenticated user
+ * POST /api/invitations/send
+ * Send invitations to selected guests
  */
-router.get('/', async (req: AuthRequest, res: Response) => {
+router.post('/send', async (req: AuthRequest, res: Response) => {
   try {
-    const invitations = await prisma.invitation.findMany({
-      where: { userId: req.user!.id },
-      include: {
-        cardDesign: true,
-        invitationGuests: {
-          include: { guest: true },
-        },
-        _count: {
-          select: { payments: true, invitationGuests: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const { guestIds, eventId } = req.body;
 
-    return res.json({
-      success: true,
-      data: invitations.map(inv => ({
-        id: inv.id,
-        userId: inv.userId,
-        cardDesignId: inv.cardDesignId,
-        guests: inv.invitationGuests.map(ig => ig.guest),
-        createdAt: inv.createdAt,
-        updatedAt: inv.updatedAt,
-      })),
-    } as ApiResponse<Invitation[]>);
-  } catch (error) {
-    console.error('Error fetching invitations:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-    } as ApiResponse<null>);
-  }
-});
-
-/**
- * POST /api/invitations
- * Create a new invitation with selected guests and card design
- */
-router.post('/', async (req: AuthRequest, res: Response) => {
-  try {
-    const { cardDesignId, guestIds } = req.body;
-
-    if (!cardDesignId || !guestIds || !Array.isArray(guestIds) || guestIds.length === 0) {
+    if (!guestIds || !Array.isArray(guestIds) || guestIds.length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'cardDesignId and guestIds array are required',
+        error: 'Guest IDs are required',
       } as ApiResponse<null>);
     }
 
-    // Verify card design exists
-    const cardDesign = await prisma.cardDesign.findUnique({
-      where: { id: cardDesignId },
+    if (!eventId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Event ID is required',
+      } as ApiResponse<null>);
+    }
+
+    // Verify event belongs to user
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
     });
 
-    if (!cardDesign) {
-      return res.status(404).json({
+    if (!event || event.userId !== req.user!.id) {
+      return res.status(403).json({
         success: false,
-        error: 'Card design not found',
+        error: 'Access denied',
       } as ApiResponse<null>);
     }
 
-    // Verify all guests belong to the user
+    // Get guests and verify they belong to the user and event
     const guests = await prisma.guest.findMany({
       where: {
         id: { in: guestIds },
         userId: req.user!.id,
+        eventId: eventId,
       },
     });
 
     if (guests.length !== guestIds.length) {
-      return res.status(403).json({
+      return res.status(400).json({
         success: false,
-        error: 'Some guests not found or access denied',
+        error: 'Some guests were not found or do not belong to you',
       } as ApiResponse<null>);
     }
 
-    // Create invitation
-    const invitation = await prisma.invitation.create({
-      data: {
-        id: uuidv4(),
-        userId: req.user!.id,
-        cardDesignId,
-        invitationGuests: {
-          create: guestIds.map(id => ({ guestId: id })),
-        },
-      },
-      include: {
-        cardDesign: true,
-        invitationGuests: {
-          include: { guest: true },
-        },
-      },
+    // Check user has enough message credits
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      select: { messageCredits: true },
     });
 
-    // Generate cards for all guests
-    await generateCardsForInvitation(invitation.id);
+    if (!user || user.messageCredits < guests.length) {
+      return res.status(400).json({
+        success: false,
+        error: `Insufficient message credits. You have ${user.messageCredits} but need ${guests.length}`,
+      } as ApiResponse<null>);
+    }
 
-    return res.status(201).json({
+    // Get event to build card URL
+    const baseUrl = process.env.BASE_URL || 'http://46.62.209.58';
+    const invitationTemplateId = process.env.TWILIO_INVITATION_TEMPLATE_ID;
+    const results = [];
+
+    if (!invitationTemplateId) {
+      return res.status(400).json({
+        success: false,
+        error: 'TWILIO_INVITATION_TEMPLATE_ID not configured',
+      } as ApiResponse<null>);
+    }
+
+    // Send invitations to each guest
+    for (const guest of guests) {
+      try {
+        // Generate card image if it doesn't exist
+        let cardUrl: string;
+        if (!cardExists(guest.code)) {
+          const generatedPath = await generateGuestCard(guest.id);
+          if (!generatedPath) {
+            throw new Error('Failed to generate card image');
+          }
+          cardUrl = `${baseUrl}${generatedPath}`;
+        } else {
+          cardUrl = `${baseUrl}/cards/${guest.code}.png`;
+        }
+
+        // Build status callback URL for this guest
+        const statusCallbackUrl = `${baseUrl}/api/webhooks/twilio/status`;
+
+        // Send WhatsApp message with template and media
+        // First send the image
+        const mediaResult = await sendWhatsAppMedia(guest.mobile, cardUrl, '', statusCallbackUrl);
+        
+        if (!mediaResult.success) {
+          throw new Error(mediaResult.error || 'Failed to send image');
+        }
+
+        // Then send template message (if template supports variables)
+        // Note: Template message is optional - we primarily send the image
+        await sendTemplateMessage(guest.mobile, invitationTemplateId, {
+          '1': guest.name,
+          '2': event.name || '',
+        }).catch(err => {
+          // Log but don't fail if template send fails
+          console.warn(`Template message failed for guest ${guest.id}:`, err);
+        });
+
+        // Consider it successful if media was sent (template is optional)
+        if (mediaResult.success) {
+          // Update guest status with message SID for tracking
+          await prisma.guest.update({
+            where: { id: guest.id },
+            data: {
+              sendStatus: 'sent',
+              messageSid: mediaResult.sid || null,
+              lastSentAt: new Date(),
+            },
+          });
+
+          // Deduct message credit
+          await prisma.user.update({
+            where: { id: req.user!.id },
+            data: {
+              messageCredits: {
+                decrement: 1,
+              },
+            },
+          });
+
+          results.push({
+            guestId: guest.id,
+            success: true,
+            messageId: mediaResult.sid,
+          });
+        } else {
+          // Update guest status to failed
+          await prisma.guest.update({
+            where: { id: guest.id },
+            data: {
+              sendStatus: 'failed',
+              lastSentAt: new Date(),
+            },
+          });
+
+          results.push({
+            guestId: guest.id,
+            success: false,
+            error: mediaResult.error,
+          });
+        }
+      } catch (error) {
+        console.error(`Error sending to guest ${guest.id}:`, error);
+        await prisma.guest.update({
+          where: { id: guest.id },
+          data: {
+            sendStatus: 'failed',
+            lastSentAt: new Date(),
+          },
+        });
+
+        results.push({
+          guestId: guest.id,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    const successCount = results.filter(r => r.success).length;
+    const failCount = results.filter(r => !r.success).length;
+
+    return res.json({
       success: true,
       data: {
-        id: invitation.id,
-        userId: invitation.userId,
-        cardDesignId: invitation.cardDesignId,
-        guests: invitation.invitationGuests.map(ig => ig.guest),
-        createdAt: invitation.createdAt,
-        updatedAt: invitation.updatedAt,
+        results,
+        summary: {
+          total: guests.length,
+          successful: successCount,
+          failed: failCount,
+        },
       },
-    } as ApiResponse<Invitation>);
+    } as ApiResponse<{
+      results: Array<{
+        guestId: string;
+        success: boolean;
+        messageId?: string;
+        error?: string;
+      }>;
+      summary: {
+        total: number;
+        successful: number;
+        failed: number;
+      };
+    }>);
   } catch (error) {
-    console.error('Error creating invitation:', error);
+    console.error('Error sending invitations:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
@@ -137,4 +218,3 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 });
 
 export default router;
-

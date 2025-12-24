@@ -2,9 +2,7 @@
  * Event management routes
  */
 import { Router, Response } from 'express';
-import { ApiResponse, Event } from '@inviteme/shared';
-// eslint-disable-next-line import/named
-import type { CreateEventBody, UpdateEventBody } from '@inviteme/shared';
+import { ApiResponse, Event, CreateEventBody, UpdateEventBody } from '@inviteme/shared';
 import { prisma } from '../config/database';
 import { authenticate, AuthRequest } from '../middleware/auth';
 

@@ -41,6 +41,20 @@ export interface EventsState {
   isDeleting: boolean;
 }
 
+export interface AccountInfo {
+  id: string;
+  phoneNumber: string;
+  messageCredits: number;
+  createdAt: Date;
+}
+
+export interface AccountState {
+  account: AccountInfo | null;
+  isLoading: boolean;
+  error: string | null;
+  isPurchasing: boolean;
+}
+
 export interface CardDesignsState {
   designs: CardDesign[];
   isLoading: boolean;

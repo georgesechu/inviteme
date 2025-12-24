@@ -73,3 +73,36 @@ export async function sendWhatsAppText(
   }
 }
 
+export async function sendWhatsAppMedia(
+  toPhone: string,
+  mediaUrl: string,
+  body?: string,
+  statusCallback?: string
+): Promise<{ success: boolean; sid?: string; error?: string }> {
+  if (!client || !fromNumber) {
+    return { success: false, error: 'Twilio not configured' };
+  }
+  const formattedPhone = formatTanzanianPhone(toPhone);
+  if (!formattedPhone) {
+    return { success: false, error: 'Invalid phone number' };
+  }
+  try {
+    const messageOptions: any = {
+      from: `whatsapp:${fromNumber}`,
+      to: `whatsapp:${formattedPhone}`,
+      body: body || '',
+      mediaUrl: [mediaUrl],
+    };
+
+    // Add status callback if provided
+    if (statusCallback) {
+      messageOptions.statusCallback = statusCallback;
+    }
+
+    const message = await client.messages.create(messageOptions);
+    return { success: true, sid: message.sid };
+  } catch (error: any) {
+    return { success: false, error: error?.message || 'Failed to send message' };
+  }
+}
+
