@@ -134,7 +134,7 @@ export default function EventGuestsScreen() {
 
     return (
       <View style={[styles.statusBadge, { backgroundColor: bgColor }]}>
-        <Feather name={iconName} size={12} color={textColor} />
+        <Feather name={iconName} size={10} color={textColor} />
         <Text style={[styles.statusText, { color: textColor }]}>{label}</Text>
       </View>
     );
@@ -232,9 +232,13 @@ export default function EventGuestsScreen() {
                   <Feather name="user" size={20} color="#64748b" />
                 </View>
                 <View style={styles.guestInfo}>
-                  <Text style={styles.guestName}>{guest.name}</Text>
-                  <View style={styles.guestDetails}>
-                    <Text style={styles.guestMobile}>{guest.mobile}</Text>
+                  <Text style={styles.guestName} numberOfLines={2} ellipsizeMode="tail">
+                    {guest.name}
+                  </Text>
+                  <Text style={styles.guestMobile} numberOfLines={1}>
+                    {guest.mobile}
+                  </Text>
+                  <View style={styles.guestCodeRow}>
                     <View
                       style={[
                         styles.guestTypeBadge,
@@ -247,7 +251,7 @@ export default function EventGuestsScreen() {
                           guest.type === 'Single' && styles.guestTypeTextSingle,
                         ]}
                       >
-                        {guest.type}
+                        {guest.type === 'Single' ? 'S' : 'D'}
                       </Text>
                     </View>
                     <Text style={styles.guestCode}>Code: {guest.code}</Text>
@@ -255,13 +259,16 @@ export default function EventGuestsScreen() {
                 </View>
               </View>
               <View style={styles.guestActions}>
-                {getStatusBadge(guest)}
                 <TouchableOpacity
                   style={styles.deleteButton}
-                  onPress={() => handleDeleteGuest(guest.id)}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleDeleteGuest(guest.id);
+                  }}
                 >
                   <Feather name="trash-2" size={18} color="#ef4444" />
                 </TouchableOpacity>
+                {getStatusBadge(guest)}
               </View>
             </TouchableOpacity>
           );
@@ -476,12 +483,11 @@ const styles = StyleSheet.create({
   },
   guestCard: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
+    alignItems: 'flex-start',
+    padding: 12,
     backgroundColor: '#ffffff',
     borderRadius: 12,
-    marginBottom: 12,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -496,22 +502,25 @@ const styles = StyleSheet.create({
   guestContent: {
     flex: 1,
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    alignItems: 'flex-start',
+    gap: 10,
+    minWidth: 0,
   },
   guestCheckbox: {
-    marginRight: 4,
+    marginTop: 2,
   },
   guestAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#f1f5f9',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   guestInfo: {
     flex: 1,
+    minWidth: 0,
   },
   guestName: {
     fontSize: 16,
@@ -519,52 +528,54 @@ const styles = StyleSheet.create({
     color: '#0f172a',
     marginBottom: 4,
   },
-  guestDetails: {
+  guestMobile: {
+    fontSize: 13,
+    color: '#64748b',
+    marginBottom: 4,
+  },
+  guestCodeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    flexWrap: 'wrap',
-  },
-  guestMobile: {
-    fontSize: 14,
-    color: '#64748b',
+    gap: 6,
   },
   guestTypeBadge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 5,
     paddingVertical: 2,
-    borderRadius: 12,
+    borderRadius: 8,
     backgroundColor: '#e9d5ff',
+    flexShrink: 0,
   },
   guestTypeSingle: {
     backgroundColor: '#dcfce7',
   },
   guestTypeText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     color: '#7c3aed',
   },
   guestTypeTextSingle: {
     color: '#166534',
   },
   guestCode: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#94a3b8',
   },
   guestActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    gap: 4,
+    marginLeft: 8,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 10,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
   deleteButton: {

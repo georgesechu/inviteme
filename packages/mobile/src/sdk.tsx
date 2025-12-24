@@ -8,9 +8,18 @@ import { ReactNativeStorageAdapter } from './storage';
 // Set EXPO_PUBLIC_API_URL environment variable to override
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.235:3000';
 
+// Create storage adapter
+const storage = new ReactNativeStorageAdapter();
+
 // Create SDK instance with React Native storage
 export const sdk = createSDK({
   baseUrl: API_BASE_URL,
-  storage: new ReactNativeStorageAdapter(),
+  storage,
+});
+
+// Initialize storage and restore auth
+storage.waitForInit().then(() => {
+  // After storage is initialized, restore auth state
+  sdk.auth.restoreAuth();
 });
 
